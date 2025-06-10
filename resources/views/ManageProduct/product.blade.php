@@ -4,14 +4,47 @@
             Product List 
         </x-slot>
         <x-slot name="data">
-            You can view the selling products add into the cart.     
+            You can view the selling products and add them to the cart.     
         </x-slot>
     </x-page-comment>
 
     <div class="mx-10">
-        <!-- Tabs -->
+
+    <!-- 🔍 Search & Filter Form -->
+    <form method="GET" action="{{ route('product') }}" class="flex flex-wrap gap-4 mb-6 items-center bg-white p-4 rounded shadow">
+        <input 
+            type="text" 
+            name="search" 
+            value="{{ request('search') }}" 
+            placeholder="Search by name" 
+            class="border border-gray-300 rounded px-3 py-2 w-full md:w-1/4"
+        />
+
+        <select name="category" class="border border-gray-300 rounded px-3 py-2 w-full md:w-1/5">
+            <option value="">All Categories</option>
+            @foreach ($productsByCategory as $category => $products)
+                <option value="{{ $category }}" {{ request('category') == $category ? 'selected' : '' }}>
+                    {{ $category }}
+                </option>
+            @endforeach
+        </select>
+
+        <select name="status" class="border border-gray-300 rounded px-3 py-2 w-full md:w-1/5">
+            <option value="">All Status</option>
+            <option value="Available" {{ request('status') == 'Available' ? 'selected' : '' }}>Available</option>
+            <option value="Low Stock" {{ request('status') == 'Low Stock' ? 'selected' : '' }}>Low Stock</option>
+            <option value="Out of Stock" {{ request('status') == 'Out of Stock' ? 'selected' : '' }}>Out of Stock</option>
+        </select>
+
+        <div class="w-full md:w-auto">
+            <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">
+                Search
+            </button>
+        </div>
+    </form>
+
+        <!-- 🗂️ Tabs -->
         <ul class="flex border-b">
-            <!-- All Products Tab -->
             <li class="mr-2">
                 <button 
                     data-category="all" 
@@ -19,8 +52,6 @@
                     All Categories
                 </button>
             </li>
-    
-            <!-- Category Tabs -->
             @foreach ($productsByCategory as $category => $products)
                 <li class="mr-2">
                     <button 
@@ -32,14 +63,13 @@
             @endforeach
         </ul>
 
-        <!-- Tab Content -->
+        <!-- 📦 Product Lists by Tab -->
         <div class="mt-4">
-            <!-- All Products -->        
             <div class="category-content all">
                 <h3 class="font-bold text-lg mb-2">All Products</h3>
                 <div class="grid grid-cols-3 gap-4">
-                    @foreach ($productsByCategory->flatten() as $i => $product) <!-- Flatten to show all -->
-                        @if($product->product_quantity >= 1) <!-- Show only if quantity >= 1 -->
+                    @foreach ($productsByCategory->flatten() as $i => $product)
+                        @if($product->product_quantity >= 1)
                             <div class="p-4 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 relative">
                                 <a href="{{ route('view.product', $product->id) }}" class="block">
                                     @if($product->product_image)
@@ -53,8 +83,9 @@
                                     <h4 class="text-m font-semibold">{{ $product->product_name }}</h4>
                                     <p class="font-semibold text-gray-600">RM {{ $product->product_selling_price }}</p>
                                 </a>
-
-                                <button type="button" data-modal-target="add-to-cart-modal-[{{ $i }}]" data-modal-toggle="add-to-cart-modal-[{{ $i }}]" class="absolute bottom-2 right-2 rounded-full py-2 px-3 bg-green-50 border border-green-200 justify-center items-center hover:bg-green-100 ml-2"><i class="fa-regular fa-cart-plus text-black fa-sm"></i></button>
+                                <button type="button" data-modal-target="add-to-cart-modal-[{{ $i }}]" data-modal-toggle="add-to-cart-modal-[{{ $i }}]" class="absolute bottom-2 right-2 rounded-full py-2 px-3 bg-green-50 border border-green-200 justify-center items-center hover:bg-green-100 ml-2">
+                                    <i class="fa-regular fa-cart-plus text-black fa-sm"></i>
+                                </button>
                                 <x-add-to-cart-modal :route="route('add.cart', $product->id)" 
                                     title="Add to Cart" image="{{ $product->product_image }}" 
                                     description="{{ $product->product_name }}" 
@@ -66,14 +97,13 @@
                     @endforeach
                 </div>
             </div>
-            
-            <!-- Individual Categories -->
+
             @foreach ($productsByCategory as $category => $products)
                 <div class="category-content {{ Str::slug($category) }} hidden">
                     <h3 class="font-bold text-lg mb-2">{{ $category }} Products</h3>
                     <div class="grid grid-cols-3 gap-4">
                         @foreach ($products as $i => $product)
-                            @if($product->product_quantity >= 1) <!-- Show only if quantity >= 1 -->
+                            @if($product->product_quantity >= 1)
                                 <div class="p-4 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 relative">
                                     <a href="{{ route('view.product', $product->id) }}" class="block">
                                         @if($product->product_image)
@@ -82,28 +112,30 @@
                                                 class="w-full h-32 object-contain mb-2" 
                                                 alt="{{ $product->product_name }}">
                                         @else
-                                        <p>No Image Available</p>
+                                            <p>No Image Available</p>
                                         @endif
                                         <h4 class="text-m font-semibold">{{ $product->product_name }}</h4>
                                         <p class="font-semibold text-gray-600">RM {{ $product->product_selling_price }}</p>
                                     </a>
-                                        
-                                    <button type="button" data-modal-target="add-to-cart-modal-[{{ Str::slug($category) }}-{{ $i }}]" data-modal-toggle="add-to-cart-modal-[{{ Str::slug($category) }}-{{ $i }}]" class="absolute bottom-2 right-2 rounded-full py-2 px-3 bg-green-50 border border-green-200 justify-center items-center hover:bg-green-100 ml-2"><i class="fa-regular fa-cart-plus text-black fa-sm"></i></button>
+                                    <button type="button" data-modal-target="add-to-cart-modal-[{{ Str::slug($category) }}-{{ $i }}]" data-modal-toggle="add-to-cart-modal-[{{ Str::slug($category) }}-{{ $i }}]" class="absolute bottom-2 right-2 rounded-full py-2 px-3 bg-green-50 border border-green-200 justify-center items-center hover:bg-green-100 ml-2">
+                                        <i class="fa-regular fa-cart-plus text-black fa-sm"></i>
+                                    </button>
                                     <x-add-to-cart-modal :route="route('add.cart', $product->id)" 
-                                    title="Add to Cart" image="{{ $product->product_image }}" 
-                                    description="{{ $product->product_name }}" 
-                                    id="{{ Str::slug($category) }}-{{ $i }}"
-                                    productID="{{ $product->id }}"
-                                    maxQuantity="{{ $product->product_quantity }}"/>
+                                        title="Add to Cart" image="{{ $product->product_image }}" 
+                                        description="{{ $product->product_name }}" 
+                                        id="{{ Str::slug($category) }}-{{ $i }}"
+                                        productID="{{ $product->id }}"
+                                        maxQuantity="{{ $product->product_quantity }}"/>
                                 </div>
                             @endif
                         @endforeach
                     </div>
                 </div>
-            @endforeach 
+            @endforeach
         </div>
     </div>
 </x-app-layout>
+
 
 <script>
     // JavaScript to toggle active class on category tabs

@@ -10,27 +10,41 @@ class ManageProductController extends Controller
 {
     public function index(Request $request)
     {
-        $productsByCategory = Product::all()->groupBy('product_category');
-        $products = Product::when($request->category, function ($query, $category) {
-            return $query->where('product_category', $category);
-        })->get();
-    
-        // Iterate through the products and update the status
-        foreach ($products as $product) {
-            if ($product->product_quantity == 0) {
-                $product->product_status = 'Out of Stock';
-            } elseif ($product->product_quantity <= 10) {
-                $product->product_status = 'Low Stock';
-            } else {
-                $product->product_status = 'Available';
-            }
-    
-            // Save the updated product status to the database
-            $product->save();
+        $categories = Product::select('product_category')->distinct()->get();
+
+    // Apply filters
+    $products = Product::query();
+
+    if ($request->filled('search')) {
+        $products->where('product_name', 'like', '%' . $request->search . '%');
+    }
+
+    if ($request->filled('category')) {
+        $products->where('product_category', $request->category);
+    }
+
+    if ($request->filled('status')) {
+        $products->where('product_status', $request->status);
+    }
+
+    $products = $products->get();
+
+    // Update product status based on quantity
+    foreach ($products as $product) {
+        if ($product->product_quantity == 0) {
+            $product->product_status = 'Out of Stock';
+        } elseif ($product->product_quantity <= 10) {
+            $product->product_status = 'Low Stock';
+        } else {
+            $product->product_status = 'Available';
         }
-    
-        // Pass the products to the view
-        return view('ManageProduct.product', compact('products', 'productsByCategory'));
+        $product->save();
+    }
+
+    // Group products by category after filtering
+    $productsByCategory = $products->groupBy('product_category');
+
+    return view('ManageProduct.product', compact('products', 'productsByCategory', 'categories'));
     }
 
     public function showProductList(Request $request)
