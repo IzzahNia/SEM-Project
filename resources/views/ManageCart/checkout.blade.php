@@ -54,25 +54,13 @@
             <label for="payment_type" class="font-semibold text-sm text-gray mb-2">Payment Method</label>
             <div class="flex space-x-6 mt-2">
                 <label class="inline-flex items-center">
-                    <input type="radio" name="payment_type" value="Cash" class="form-radio text-blue-600" 
-                        {{ old('payment_type') == 'cash' ? 'checked' : '' }} required>
+                    <input type="radio" name="payment_type" value="Cash" class="form-radio text-blue-600" required>
                     <span class="ml-2 text-sm">Cash</span>
                 </label>
                 <label class="inline-flex items-center">
-                    <input type="radio" name="payment_type" value="Online Payment" class="form-radio text-blue-600" 
-                        {{ old('payment_type') == 'online payment' ? 'checked' : '' }} required>
+                    <input type="radio" name="payment_type" value="Online Payment" class="form-radio text-blue-600" required>
                     <span class="ml-2 text-sm">Online Payment</span>
                 </label>
-                <label class="inline-flex items-center">
-                    <input type="radio" name="payment_type" value="E-Wallet" class="form-radio text-blue-600" 
-                        {{ old('payment_type') == 'e-wallet' ? 'checked' : '' }} required>
-                    <span class="ml-2 text-sm">E-wallet</span>
-                </label>
-                <label class="inline-flex items-center">
-                    <input type="radio" name="payment_type" value="Credit/Debit Card" class="form-radio text-blue-600" 
-                        {{ old('payment_type') == 'credit/debit card' ? 'checked' : '' }} required>
-                    <span class="ml-2 text-sm">Credit/Debit Card</span>
-                </label>                   
             </div>
             @error('payment_type')
                 <div class="text-red-500 text-sm mt-1">{{ $message }}</div>
