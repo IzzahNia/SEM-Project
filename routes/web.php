@@ -32,7 +32,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/edit-user/{id}', [ManageUserController::class, 'updateUser'])->name('update.user');
     Route::delete('/delete-user/{id}', [ManageUserController::class, 'deleteUser'])->name('delete.user');
 
-    //Route for Product 
+    //Route for Product
     Route::get('/product', [ManageProductController::class, 'index'])->name('product');
     Route::get('/product-list', [ManageProductController::class, 'showProductList'])->name('product.list');
     Route::get('/view-product/{id}', [ManageProductController::class, 'viewProduct'])->name('view.product');
@@ -42,7 +42,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/edit-products/{id}', [ManageProductController::class, 'updateProduct'])->name('update.product');
     Route::delete('/delete-products/{id}', [ManageProductController::class, 'deleteProduct'])->name('delete.product');
 
-    //Route for Cart 
+    //Route for Cart
     Route::get('/cart-list', [ManageCartController::class, 'showCartList'])->name('cart.list');
     Route::post('/add-cart/{id}', [ManageCartController::class, 'addToCart'])->name('add.cart');
     Route::post('/cart/update', [ManageCartController::class, 'updateCartQuantity'])->name('cart.update');
@@ -50,7 +50,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/checkout', [ManageCartController::class, 'showCheckout'])->name('checkout.list');
     Route::post('/place-order', [ManageCartController::class, 'placeOrder'])->name('place.order');
 
-    //Route for Order 
+    //Route for Order
     Route::get('/order-list', [ManageOrderController::class, 'showOrderList'])->name('order.list');
     Route::get('/order-progress', [ManageOrderController::class, 'showOrderProgress'])->name('order.progress');
     Route::get('/view-order/{id}', [ManageOrderController::class, 'viewOrder'])->name('view.order');
@@ -60,12 +60,20 @@ Route::middleware('auth')->group(function () {
     Route::get('/edit-order/{id}', [ManageOrderController::class, 'editOrder'])->name('edit.order');
     Route::put('/edit-order/{id}', [ManageOrderController::class, 'updateOrder'])->name('update.order');
     Route::delete('/delete-order/{id}', [ManageOrderController::class, 'deleteOrder'])->name('delete.order');
+    Route::get('/new-order-notifications', [ManageOrderController::class, 'newOrderNotifications'])->name('order.notifications');
+    Route::get('/order/history', [ManageOrderController::class, 'orderHistory'])->name('order.history');
+    Route::get('/purchase-history', [ManageOrderController::class, 'purchaseHistory'])->name('order.history_page');
+ 
 
-    //Route for Payment 
+
+
+
+
+    //Route for Payment
     Route::get('/payment-list', [ManagePaymentController::class, 'showPaymentList'])->name('payment.list');
     Route::get('/view-payment/{id}', [ManagePaymentController::class, 'viewPayment'])->name('view.payment');
- 
-    //Route for Recycle Activity 
+
+    //Route for Recycle Activity
     Route::get('/recycle-activity-list', [ManageRecycleActivityController::class, 'showRecycleActivityList'])->name('recycle.activity.list');
     Route::get('/view-recycle-activity/{id}', [ManageRecycleActivityController::class, 'viewRecycleActivity'])->name('view.recycle.activity');
     Route::get('/add-recycle-activity', [ManageRecycleActivityController::class, 'addRecycleActivity'])->name('add.recycle.activity');
@@ -74,7 +82,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/edit-recycle-activity/{id}', [ManageRecycleActivityController::class, 'updateRecycleActivity'])->name('update.recycle.activity');
     Route::delete('/delete-recycle-activity/{id}', [ManageRecycleActivityController::class, 'deleteRecycleActivity'])->name('delete.recycle.activity');
 
-    //Route for Reward 
+    //Route for Reward
     Route::get('/reward-list', [ManageRewardController::class, 'showRewardList'])->name('reward.list');
     Route::get('/view-reward/{id}', [ManageRewardController::class, 'viewReward'])->name('view.reward');
     Route::post('/redeem-reward/{id}', [ManageRewardController::class, 'redeemReward'])->name('redeem.reward');

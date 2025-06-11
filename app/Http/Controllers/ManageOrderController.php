@@ -20,6 +20,50 @@ class ManageOrderController extends Controller
     //     return view('ManageOrder.order_list', compact('orders'));
     // }
 
+public function orderHistory()
+{
+    $user = Auth::user();
+
+    $orders = Order::with(['orderItems', 'user'])
+        ->where('user_id', $user->id)
+        ->where('order_status', '!=', 'pending') // optional filter
+        ->get();
+
+    return view('ManageOrder.history_order', compact('orders'));
+}
+
+
+   public function newOrderNotifications()
+{
+    $user = Auth::user();
+
+    if ($user->role === 'admin') {
+        // Admin sees all pending orders
+        $orders = Order::with(['orderItems', 'user'])
+            ->where('order_status', 'pending')
+            ->orderBy('order_datetime', 'desc') // Optional: newest first
+            ->get();
+    } else {
+        // Users see only their pending orders
+        $orders = Order::with(['orderItems', 'user'])
+            ->where('user_id', $user->id)
+            ->where('order_status', 'pending')
+            ->orderBy('order_datetime', 'desc') // Optional: newest first
+            ->get();
+    }
+
+    return view('ManageOrder.new_order', compact('orders'));
+}
+
+
+public function purchaseHistory()
+{
+    $userId = auth()->id();
+    $orders = Order::where('user_id', $userId)->where('order_status', '!=', 'pending')->get();
+    return view('ManageOrder.history_order', compact('orders'));
+}
+
+
     public function showOrderList()
     {
         $user = Auth::user();
@@ -43,11 +87,11 @@ class ManageOrderController extends Controller
             ->where('user_id', auth()->id())  // Filter by the authenticated user
             ->latest()  // Get the most recent order
             ->first();  // Get the first result (the latest order)
-    
+
         // Pass the order to the view
         return view('ManageOrder.order_progress', compact('order'));
     }
-    
+
 
     // Method to retrieve product price via AJAX
     public function findPrice(Request $request)
@@ -68,7 +112,7 @@ class ManageOrderController extends Controller
 
         return view('ManageOrder.add_order_form', compact('users', 'products'));
     }
-    
+
     public function createOrder(Request $request)
     {
         $validatedData = $request->validate([
@@ -82,26 +126,26 @@ class ManageOrderController extends Controller
             'amount.*' => 'required|numeric',
             'payment_type' => 'required|string',
         ]);
-    
+
         // Check stock availability for each product in the order
         foreach ($request->product_id as $index => $productId) {
             $product = Product::find($productId);
             $orderQuantity = $request->qty[$index];
-    
+
             if ($orderQuantity > $product->product_quantity) {
                 return redirect()->back()->with('error', "Order quantity for product {$product->product_name} exceeds available stock.");
             }
         }
-    
+
         $validatedData['order_total_price'] = array_sum($request->amount);
-    
+
         $order = Order::create([
             'user_id' => $validatedData['customer_id'],
             'order_datetime' => $validatedData['order_datetime'],
             'order_status' => $validatedData['order_status'],
             'order_total_price' => $validatedData['order_total_price'],
         ]);
-    
+
         foreach ($request->product_id as $index => $productId) {
             $order->orderItems()->create([
                 'product_id' => $productId,
@@ -110,7 +154,7 @@ class ManageOrderController extends Controller
                 'order_item_discount' => $request->dis[$index] ?? 0,
                 'order_item_amount' => $request->amount[$index],
             ]);
-    
+
             // Deduct product quantity and update product_sold if status is Completed
             if ($validatedData['order_status'] === 'Completed') {
                 $product = Product::find($productId);
@@ -118,44 +162,44 @@ class ManageOrderController extends Controller
                 $product->increment('product_sold', $request->qty[$index]); // Add to sold count
             }
         }
-    
+
         $paymentStatus = ($validatedData['order_status'] === 'Completed') ? 'Paid' : 'Pending';
-    
+
         $order->payment()->create([
             'payment_amount' => $validatedData['order_total_price'],
             'payment_status' => $paymentStatus,
             'payment_type' => $validatedData['payment_type'],
         ]);
-    
+
         return redirect()->route('order.list')->with('success', 'Order created successfully.');
     }
-    
-    
+
+
     public function deleteOrder($id)
     {
         $order = Order::with('orderItems')->findOrFail($id);
-    
+
         DB::beginTransaction();
-    
+
         try {
             // Delete the associated payment record
             $order->payment()->delete();
-    
+
             // Delete all associated order items
             $order->orderItems()->delete();
-    
+
             // Delete the order itself
             $order->delete();
-    
+
             DB::commit(); // Commit the transaction
-    
+
             return redirect()->route('order.list')->with('success', 'Order and related payment deleted successfully.');
         } catch (\Exception $e) {
             DB::rollback(); // Rollback the transaction if something goes wrong
             return redirect()->route('order.list')->with('error', 'Failed to delete order and related payment.');
         }
     }
-    
+
     public function viewOrder($id)
     {
         $order = Order::with('orderItems')->findOrFail($id);
@@ -172,7 +216,7 @@ class ManageOrderController extends Controller
     // public function updateOrder(Request $request, $id)
     // {
     //     $order = Order::with('orderItems')->findOrFail($id);
-    
+
     //     $validatedData = $request->validate([
     //         'order_datetime' => 'required|date',
     //         'order_status' => 'required|string',
@@ -187,12 +231,12 @@ class ManageOrderController extends Controller
     //     foreach ($request->product_id as $index => $productId) {
     //         $product = Product::find($productId);
     //         $orderQuantity = $request->qty[$index];
-    
+
     //         if ($orderQuantity > $product->product_quantity) {
     //             return redirect()->back()->with('error', "Order quantity for product {$product->product_name} exceeds available stock.");
     //         }
     //     }
-    
+
     //     DB::beginTransaction();
     //     try {
     //         // Reverse changes to product quantities and sold count if the original status was Completed
@@ -203,15 +247,15 @@ class ManageOrderController extends Controller
     //                 $product->decrement('product_sold', $item->order_item_quantity); // Revert sold count
     //             }
     //         }
-    
+
     //         $order->update([
     //             'order_datetime' => $validatedData['order_datetime'],
     //             'order_status' => $validatedData['order_status'],
     //             'order_total_price' => array_sum($request->amount),
     //         ]);
-    
+
     //         $order->orderItems()->delete(); // Remove old items
-    
+
     //         foreach ($request->product_id as $index => $productId) {
     //             $order->orderItems()->create([
     //                 'product_id' => $productId,
@@ -220,7 +264,7 @@ class ManageOrderController extends Controller
     //                 'order_item_discount' => $request->dis[$index] ?? 0,
     //                 'order_item_amount' => $request->amount[$index],
     //             ]);
-    
+
     //             // Deduct product quantity and update product_sold if status is Completed
     //             if ($validatedData['order_status'] === 'Completed') {
     //                 $product = Product::find($productId);
@@ -228,7 +272,7 @@ class ManageOrderController extends Controller
     //                 $product->increment('product_sold', $request->qty[$index]); // Add to sold count
     //             }
     //         }
-    
+
     //         // Update or create payment record
     //         $order->payment()->updateOrCreate(
     //             [],
@@ -238,7 +282,7 @@ class ManageOrderController extends Controller
     //                 'payment_type' => $validatedData['payment_type'],
     //             ]
     //         );
-    
+
     //         DB::commit();
     //         return redirect()->route('order.list')->with('success', 'Order updated successfully.');
     //     } catch (\Exception $e) {
@@ -246,11 +290,11 @@ class ManageOrderController extends Controller
     //         return redirect()->route('order.list')->with('error', 'Failed to update order.');
     //     }
     // }
-     
+
     public function updateOrder(Request $request, $id)
     {
         $order = Order::with('orderItems')->findOrFail($id);
-    
+
         $validatedData = $request->validate([
             'order_datetime' => 'required|date',
             'order_status' => 'required|string',
@@ -261,7 +305,7 @@ class ManageOrderController extends Controller
             'amount.*' => 'required|numeric',
             'payment_type' => 'required|string',
         ]);
-        
+
         // Validate quantities against available stock
         foreach ($request->product_id as $index => $productId) {
             $product = Product::find($productId);
@@ -282,16 +326,16 @@ class ManageOrderController extends Controller
                     $product->decrement('product_sold', $item->order_item_quantity); // Revert sold count
                 }
             }
-    
-    
+
+
             $order->update([
                 'order_datetime' => $validatedData['order_datetime'],
                 'order_status' => $validatedData['order_status'],
                 'order_total_price' => array_sum($request->amount),
             ]);
-    
+
             $order->orderItems()->delete(); // Remove old items
-    
+
             foreach ($request->product_id as $index => $productId) {
                 $order->orderItems()->create([
                     'product_id' => $productId,
@@ -300,7 +344,7 @@ class ManageOrderController extends Controller
                     'order_item_discount' => $request->dis[$index] ?? 0,
                     'order_item_amount' => $request->amount[$index],
                 ]);
-    
+
                 // Deduct product quantity and update product_sold if status is Completed
                 if ($validatedData['order_status'] === 'Completed') {
                     $product = Product::find($productId);
@@ -308,7 +352,7 @@ class ManageOrderController extends Controller
                     $product->increment('product_sold', $request->qty[$index]); // Add to sold count
                 }
             }
-    
+
             // Update or create payment record
             $order->payment()->updateOrCreate(
                 [],
@@ -318,7 +362,7 @@ class ManageOrderController extends Controller
                     'payment_type' => $validatedData['payment_type'],
                 ]
             );
-    
+
             DB::commit();
             return redirect()->route('order.list')->with('success', 'Order updated successfully.');
         } catch (\Exception $e) {
@@ -326,6 +370,6 @@ class ManageOrderController extends Controller
             return redirect()->route('order.list')->with('error', 'Failed to update order.');
         }
     }
-    
+
 
 }

@@ -1,11 +1,11 @@
 <x-app-layout>
     <x-page-comment>
         <x-slot name="title">
-            Order Management
+            New Order List
         </x-slot>
         <x-slot name="data">
             {{ auth()->user()->hasRole('admin') ?
-            'This Order List is from the customer. Admin is able to manage the orders by updating the status (Completed or Canceled) and create the new orders.' :
+            'This New Order List is from the customer. Admin is able to manage the orders by updating the status (Completed or Canceled).' :
             'You create, edit, view and pay the orders on this page.'
            }}
         </x-slot>
@@ -13,15 +13,14 @@
 
     @if(auth()->user()->hasRole('admin'))
     <div class="mx-10">
-        <a href="{{ route('add.order') }}"><x-button>Add Order</x-button></a>
-        <a href="{{ route('order.notifications') }}"><x-button>New Order</x-button></a>
+
     </div>
     @endif
 
     <div class="grid grid-cols-3 gap-12 mx-10 my-6">
         <div class="col-span-3">
             <div class="flex justify-between items-center w-auto">
-                <p class="font-bold text-md">Order List</p>
+                <p class="font-bold text-md">New Order List</p>
                 <div class="flex items-center space-x-4">
                     <!-- Primary Sorting Dropdown -->
                     <select id="primarySort" class="py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-semibold">
@@ -59,18 +58,27 @@
                             <td class="py-2 text-gray text-sm font-semibold text-left w-1/3">{{ ucfirst($order->order_status) }}</td>
                             <td class="py-2 text-gray text-sm font-semibold text-left w-1/3">
                                 @if(auth()->user()->hasRole('admin'))
-                                    @if ($order->order_status == 'Completed')
-                                    <a href="{{ route('view.order', $order->id) }}" class="rounded-full py-2 px-3 bg-blue-100 border border-blue-200 hover:bg-blue-200 ml-2">
-                                        <i class="fa-regular fa-eye text-blue-500 fa-sm"></i>
-                                    </a>
+                                  @if ($order->order_status == 'Completed')
+                                        <a href="{{ route('view.order', $order->id) }}"
+                                        class="rounded-full py-2 px-3 bg-blue-100 border border-blue-200 hover:bg-blue-200">
+                                            <i class="fa-regular fa-eye text-blue-500 fa-sm"></i>
+                                        </a>
                                     @else
-                                    <a href="{{ route('edit.order', $order->id) }}" class="rounded-full py-2 px-3 bg-green-100 border border-green-200 hover:bg-green-200 ml-2">
-                                        <i class="fa-regular fa-pen text-green-500 fa-sm"></i>
-                                    </a>
-                                        <button type="button" data-modal-target="popup-modal-[{{ $i }}]" data-modal-toggle="popup-modal-[{{ $i }}]" class="rounded-full py-2 px-3 bg-red-50 border border-red-200 justify-center items-center hover:bg-red-100 ml-2"><i class="fa-regular fa-trash-can text-red-500 fa-sm"></i></button>
-                                        <div class="mx-50 space-x-50 flex justify-center items-center">
-                                    <a href="{{ route('order.progress') }}"><x-button>Order Progress</x-button></a>
-                                </div>
+                                        <a href="{{ route('edit.order', $order->id) }}"
+                                        class="rounded-full py-2 px-3 bg-green-100 border border-green-200 hover:bg-green-200">
+                                            <i class="fa-regular fa-pen text-green-500 fa-sm"></i>
+                                        </a>
+
+                                        <button type="button"
+                                            data-modal-target="popup-modal-[{{ $i }}]"
+                                            data-modal-toggle="popup-modal-[{{ $i }}]"
+                                            class="rounded-full py-2 px-3 bg-red-50 border border-red-200 hover:bg-red-100">
+                                            <i class="fa-regular fa-trash-can text-red-500 fa-sm"></i>
+                                        </button>
+
+                                        <a href="{{ route('order.progress') }}">
+                                            <x-button class="py-2 px-3">Order Progress</x-button>
+                                        </a>
                                     @endif
                                 @else
 

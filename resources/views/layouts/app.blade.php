@@ -16,10 +16,10 @@
         <link rel="stylesheet" href="https://site-assets.fontawesome.com/releases/v6.4.0/css/sharp-solid.css">
         <link rel="stylesheet" href="https://site-assets.fontawesome.com/releases/v6.4.0/css/sharp-regular.css" >
         <link rel="stylesheet" href="https://site-assets.fontawesome.com/releases/v6.4.0/css/sharp-light.css">
-        
+
         {{-- AJAX Request --}}
         <script src = "https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
-        
+
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
@@ -28,12 +28,12 @@
         <div class="w-full">
             @include('layouts.navigation')
         </div>
-    
+
         <!-- Main Content: Sidebar and Page Content Side by Side -->
         <div class="flex flex-grow w-full min-h-screen">
             <!-- Sidebar -->
             <x-side-navbar/>
-            
+
             <!-- Page Content -->
             <div class="flex-grow p-6 w-full">
                 <main>
