@@ -7,6 +7,7 @@ use App\Models\Cart;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\User;
+use App\Models\Banking;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
