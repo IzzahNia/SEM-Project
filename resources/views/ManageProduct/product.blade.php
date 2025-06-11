@@ -36,8 +36,20 @@
             <option value="Out of Stock" {{ request('status') == 'Out of Stock' ? 'selected' : '' }}>Out of Stock</option>
         </select>
 
-        <div class="w-full md:w-auto">
-            <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">
+        <div style="width: 100%; max-width: 150px;">
+            <button 
+                type="submit" 
+                style="
+                    width: 100%; 
+                    background-color: #1D4ED8; 
+                    color: white; 
+                    padding: 10px 16px; 
+                    border: none; 
+                    border-radius: 6px; 
+                    font-weight: bold;
+                    cursor: pointer;
+                "
+            >
                 Search
             </button>
         </div>
