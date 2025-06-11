@@ -49,6 +49,10 @@ Route::middleware('auth')->group(function () {
     Route::delete('/cart/delete', [ManageCartController::class, 'destroy'])->name('cart.delete');
     Route::get('/checkout', [ManageCartController::class, 'showCheckout'])->name('checkout.list');
     Route::post('/place-order', [ManageCartController::class, 'placeOrder'])->name('place.order');
+    
+    //Route for Banking Form
+    Route::get('/banking/{order_id}', [ManageCartController::class, 'showBankingForm'])->name('banking.form');
+    Route::post('/banking/submit', [ManageCartController::class, 'submitBankingForm'])->name('banking.submit');
 
     //Route for Order
     Route::get('/order-list', [ManageOrderController::class, 'showOrderList'])->name('order.list');
