@@ -17,7 +17,6 @@
             @else
                  <x-show-table :headers="['Order ID', 'Customer Name', 'Total (RM)', 'Date', 'Status', 'Action']">
                 <tbody class="flex flex-col overflow-y-auto w-full" style="height: 40vh;">
-
                     @foreach ($orders->where('order_status', 'Completed') as $i => $order)
                         <tr class="flex px-8 py-2 {{ auth()->user()->hasRole('admin') ? (($loop->index % 2 == 0) ? 'bg-primary-50' : '') : (($loop->index % 2 == 0) ? 'bg-purple-50' : '') }}">
                             <td class="mx-4 py-2 text-gray text-sm font-semibold w-4">{{ $loop->iteration }}.</td>
