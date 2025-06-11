@@ -114,7 +114,7 @@ class ManageCartController extends Controller
     {
         // Proceed with order placement
         $totalAmount = session('totalAmount', 0); // Ensure the total amount is available
-    
+
         if ($totalAmount <= 0) {
             return redirect()->route('cart.list')->with('error', 'Invalid total amount.');
         }
@@ -128,7 +128,7 @@ class ManageCartController extends Controller
             'payment_type' => 'required|string',
             // 'total_amount' => 'required|numeric', // Ensure this field is validated
         ]);
-        
+
         // Create order
         $order = Order::create([
             'user_id' => auth()->id(),
@@ -147,24 +147,28 @@ class ManageCartController extends Controller
                 'order_item_amount' => $request->amount[$index],
             ]);
         }
-        
-        
+
+
         // Create payment record
+        $paymentStatus = $request->payment_type === 'Online Payment' ? 'Paid' : 'Pending';
+
         $order->payment()->create([
             'payment_amount' => $order->order_total_price,
-            'payment_status' => 'Pending',
+            'payment_status' => $paymentStatus,
             'payment_type' => $request->payment_type,
         ]);
 
         // Delete selected cart items
-        $cart = Cart::whereIn('id', $request->cart_ids)->delete();
-
-        // Clear session data
+        Cart::whereIn('id', $request->cart_ids)->delete();
         session()->forget(['cartItems', 'totalAmount']);
-    
+
+        if ($request->payment_type === 'Online Payment') {
+            return redirect()->route('banking.form', ['order_id' => $order->id]);
+        }
+
         return redirect()->route('order.progress')->with('success', 'Order placed successfully.');
     }
-    
+
     public function destroy(Request $request)
     {
         $cartId = $request->input('cart_id');
@@ -177,6 +181,32 @@ class ManageCartController extends Controller
         } catch (\Exception $e) {
             return response()->json(['status' => 'error', 'message' => 'Failed to delete cart item.']);
         }
+    }
+
+    public function showBankingForm($order_id)
+    {
+        return view('banking.form', ['order_id' => $order_id]);
+    }
+
+    public function submitBankingForm(Request $request)
+    {
+        $request->validate([
+            'order_id' => 'required|exists:orders,id',
+            'bank_name' => 'required|string|max:255',
+            'account_holder' => 'required|string|max:255',
+            'reference_number' => 'required|string|max:255',
+
+        ]);
+
+        Banking::create([
+            'user_id' => auth()->id(),
+            'order_id' => $request->order_id,
+            'bank_name' => $request->bank_name,
+            'account_holder' => $request->account_holder,
+            'reference_number' => $request->reference_number,
+        ]);
+
+        return redirect()->route('order.progress')->with('success', 'Payment completed successfully.');
     }
 
 }
