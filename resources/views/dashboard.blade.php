@@ -75,6 +75,35 @@
             </x-slot>
         </x-dashboard-item>
     </div>
+    
+    @if(auth()->user()->hasRole('admin'))
+        <div class="mx-10 mt-6">
+            <div class="bg-white p-6 rounded-md shadow-md">
+                <h3 class="text-lg font-semibold text-gray-700 mb-4">Recent Activity Logs</h3>
+            
+                @if($activityLogs->isEmpty())
+                    <p class="text-gray-500">No recent activities found.</p>
+                @else
+                    <ul class="space-y-2 text-sm text-gray-600">
+                        @foreach($activityLogs as $log)
+                            <li class="flex justify-between">
+                                <div>
+                                    <span class="font-medium text-black">{{ $log->name ?? 'System' }}</span>
+                                    — <span class="text-blue-600 font-semibold">{{ $log->action }}</span>
+                                    <span class="text-gray-700">: {{ $log->description }}</span>
+                                </div>
+                                <div class="text-xs text-gray-400">
+                                    {{ $log->created_at->diffForHumans() }}
+                                </div>
+                            </li>
+                        @endforeach
+                    </ul>
+                @endif
+            </div>
+        </div>
+    @endif
+
+
 
     <!-- Chart -->
     @if(auth()->user()->hasRole('admin'))

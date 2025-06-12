@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\ActivityLog;
 use Illuminate\Http\Request;
 use App\Models\Product;
 use App\Models\RecycleActivity;
@@ -17,29 +18,39 @@ class DashboardController extends Controller
     {
         $totalProducts = Product::count();
 
-        if (Auth()->user()->hasRole('admin')) {
-            // Admin sees all recycle activities
+        if (auth()->user()->hasRole('admin')) {
+            // Admin sees all data
             $totalRecycleActivities = RecycleActivity::count();
             $totalRewards = RedeemReward::count();
             $recycleActivities = RecycleActivity::all();
             $totalOrder = Order::count();
+
+            // Get latest 5 activity logs
+            $activityLogs = ActivityLog::whereNotNull('role')
+                ->where('role', '!=', 'admin')
+                ->latest()
+                ->take(5)
+                ->get();
         } else {
-            // Regular user sees only their own recycle activities
+            // Regular user sees own data
             $totalRecycleActivities = RecycleActivity::where('user_id', Auth::id())->count();
             $totalRewards = RedeemReward::where('user_id', Auth::id())->count();
             $recycleActivities = RecycleActivity::where('user_id', Auth::id())->get();
             $totalOrder = Order::where('user_id', Auth::id())->count();
+
+            // Users don’t need activity logs
+            $activityLogs = collect(); // empty collection
         }
 
         $chartProducts = Product::select('product_name', 'product_quantity')->get();
-        
+
         $chartRecycleActivities = RecycleActivity::select('recycle_status', \DB::raw('count(*) as total'))
-            ->when(!Auth::user()->hasRole('admin'), function ($query) {
+            ->when(!auth()->user()->hasRole('admin'), function ($query) {
                 return $query->where('user_id', Auth::id());
             })
             ->groupBy('recycle_status')
-            ->get();    
-    
+            ->get();
+
         $chartSalesProducts = OrderItem::select('products.product_name', \DB::raw('SUM(order_items.order_item_quantity) as total_quantity'))
             ->join('orders', 'order_items.order_id', '=', 'orders.id')
             ->join('products', 'order_items.product_id', '=', 'products.id')
@@ -47,22 +58,31 @@ class DashboardController extends Controller
             ->groupBy('products.product_name')
             ->get();
 
-        //User purchase products
         $chartPurchaseProducts = OrderItem::select('products.product_name', \DB::raw('SUM(order_items.order_item_quantity) as purchase_quantity'))
             ->join('orders', 'order_items.order_id', '=', 'orders.id')
             ->join('products', 'order_items.product_id', '=', 'products.id')
             ->where('orders.order_status', 'completed')
-            ->where('orders.user_id', Auth::id()) // Filter by logged-in user
+            ->where('orders.user_id', Auth::id())
             ->groupBy('products.product_name')
             ->get();
 
-        // Monthly sales data
         $monthlySales = Order::where('order_status', 'completed')
             ->selectRaw('DATE_FORMAT(order_datetime, "%M %Y") as month, SUM(order_total_price) as total_sales')
             ->groupBy('month')
             ->orderByRaw('MIN(order_datetime)')
             ->get();
 
-        return view('dashboard', compact('totalProducts','totalRecycleActivities', 'chartProducts', 'chartSalesProducts', 'chartRecycleActivities', 'totalRewards','totalOrder', 'monthlySales', 'chartPurchaseProducts'));
+        return view('dashboard', compact(
+            'activityLogs', // ✅ Pass logs to view
+            'totalProducts',
+            'totalRecycleActivities',
+            'chartProducts',
+            'chartSalesProducts',
+            'chartRecycleActivities',
+            'totalRewards',
+            'totalOrder',
+            'monthlySales',
+            'chartPurchaseProducts',
+        ));
     }
 }

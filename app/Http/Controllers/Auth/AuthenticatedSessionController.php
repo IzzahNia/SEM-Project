@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use Illuminate\Http\RedirectResponse;
+use App\Helpers\ActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
@@ -33,31 +34,28 @@ class AuthenticatedSessionController extends Controller
     // }
     public function store(LoginRequest $request): RedirectResponse
     {
-        // Validate the role
         $request->validate([
-            'role' => 'required|in:admin,user', // Ensure role is either admin or user
+            'role' => 'required|in:admin,user',
         ]);
-    
-        // Attempt to authenticate the user
+
         if (Auth::attempt($request->only('email', 'password'))) {
             $user = Auth::user();
-    
-            // Check if the role matches
+
             if ($user->role !== $request->role) {
-                Auth::logout(); // Log out if the role does not match
+                Auth::logout();
                 return back()->withErrors(['role' => 'The selected role does not match your account.']);
             }
-    
-            // Update last_active_at timestamp
+
             $user->update(['last_active_at' => now()]);
-    
+
+            // Log the login activity
+            ActivityLogger::log('Login', "User {$user->name} ({$user->email}) logged in as {$user->role}");
+
             $request->session()->regenerate();
-    
-            // Redirect based on role
+
             return redirect()->intended(route('dashboard', absolute: false));
         }
-    
-        // If authentication fails
+
         return back()->withErrors([
             'email' => 'The provided credentials do not match our records.',
         ]);

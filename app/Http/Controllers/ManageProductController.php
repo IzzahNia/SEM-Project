@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Helpers\ActivityLogger;
 use App\Models\Product;
 use App\Model\Product as ModelProduct;
 
@@ -103,6 +104,8 @@ class ManageProductController extends Controller
         }
     
         $product = Product::create(array_merge($request->all(), ['product_image' => $imageName]));
+
+        ActivityLogger::log('Create Product', 'Created product: ' . $product->product_name);
     
         return redirect()->route('product.list');
     }
@@ -150,6 +153,8 @@ class ManageProductController extends Controller
         }
 
         $product->update(array_merge($request->except('product_image'), ['product_image' => $imageName]));
+
+        ActivityLogger::log('Update Product', 'Updated product: ' . $product->product_name);
     
         return redirect()->route('product.list');
     }
@@ -168,6 +173,8 @@ class ManageProductController extends Controller
                 unlink($imagePath);
             }
         }
+
+        ActivityLogger::log('Delete Product', 'Deleted product: ' . $product->product_name);
     
         // Delete the product record from the database
         $product->delete();

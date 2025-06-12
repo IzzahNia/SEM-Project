@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Payment;
+use App\Helpers\ActivityLogger;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 
@@ -171,7 +172,11 @@ public function purchaseHistory()
             'payment_type' => $validatedData['payment_type'],
         ]);
 
+        ActivityLogger::log('Create Order', 'Order #' . $order->id . ' created by user ID ' . auth()->name());
+        
         return redirect()->route('order.list')->with('success', 'Order created successfully.');
+
+        // ActivityLogger::log('Create Order', 'Order #' . $order->id . ' created by user ID ' . auth()->id());
     }
 
 
@@ -190,6 +195,8 @@ public function purchaseHistory()
 
             // Delete the order itself
             $order->delete();
+
+            ActivityLogger::log('Delete Order', 'Order #' . $order->id . ' deleted by user ID ' . auth()->id());
 
             DB::commit(); // Commit the transaction
 
@@ -362,6 +369,8 @@ public function purchaseHistory()
                     'payment_type' => $validatedData['payment_type'],
                 ]
             );
+
+            ActivityLogger::log('Order Status Updated', 'Order #' . $order->id . ' status updated to ' . $validatedData['order_status']);
 
             DB::commit();
             return redirect()->route('order.list')->with('success', 'Order updated successfully.');

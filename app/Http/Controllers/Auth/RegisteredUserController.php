@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Helpers\ActivityLogger;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -27,11 +28,11 @@ class RegisteredUserController extends Controller
      *
      * @throws \Illuminate\Validation\ValidationException
      */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request): RedirectResponse   
     {
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
+            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:' . User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'contact_number' => ['required', 'string', 'regex:/^[0-9]+$/', 'max:20'],
         ]);
@@ -42,15 +43,20 @@ class RegisteredUserController extends Controller
             'password' => Hash::make($request->password),
             'contact_number' => $request->contact_number,
             'role' => 'user',
-            'current_reward_points' => 10, // Assign initial points
+            'current_reward_points' => 10,
             'last_active_at' => now(),
         ]);
-        
+
         $user->assignRole('user');
+
+        // Log registration activity
+        // ActivityLogger::log('Register', "New user {$user->name} ({$user->email}) registered");
 
         event(new Registered($user));
 
         Auth::login($user);
+
+        ActivityLogger::log('Register', "New user {$user->name} ({$user->email}) registered");
 
         return redirect(route('dashboard', absolute: false));
     }
